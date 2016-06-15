@@ -7,16 +7,25 @@ function [bag_data] = bagReader(bag_file, topic_name, varargin)
 %     bag_file is the path to the bag file to analyze
 %     topic_name is a string containing the topic name to read
 %
-%   BAGREADER(bag_file, topic_name, 'ros_root', path) Specifies the
-%     location of the ROS distribution so the function can find the Python
-%     packages it depends on. This is useful if ROS is built from source
-%     and not installed in a standard location. If this pair is not
-%     specified, the function will check if the PYTHONPATH environment
-%     variable is set. If it is not, then it will scan /opt/ros and look
-%     for distribution folders there.
+%   BAGREADER(bag_file, topic_name, ...) Enables optional name/value pairs.
+%     Possible options are as follows
+%
+%   'ros_root' -- A string specifying the location of the ROS distribution 
+%     so the function can find the Python packages it depends on. This is 
+%     useful if ROS is built from source and not installed in a standard 
+%     location. If this pair is not specified, the function will check if 
+%     the PYTHONPATH environment variable is set. If it is not, then it 
+%     will scan /opt/ros and look for distribution folders there.
+%
+%   'combine_times' -- A logical value which if true makes the function 
+%     search the message field names for a standard header. If one is 
+%     found, combine the second and nanosecond fields in the header to make
+%     a single combined time and add that to the results. Default value is 
+%     true.
 %
 %   Example: pose = bagReader('flight.bag', '/uav/pose');
 %   Example: pose = bagReader('flight.bag', '/uav/pose', 'ros_root', '~/ros_catkin_ws/devel');
+%   ExamplE: pose = bagReader('flight.bag', '/uav/pose', 'combine_times', false);
 
 %   Copyright (c) 2016 David Anthony
 %
@@ -37,12 +46,19 @@ function [bag_data] = bagReader(bag_file, topic_name, varargin)
 %% Input parsing and validation
 % Build an argument parser for reading the optional arguments
 input_parser = inputParser;
+% Set default values
 default_ros_root = '';
+default_time_combine = true;
+% Tell the parser how the possible inputs
 addRequired(input_parser, 'bag_file', @ischar);
 addRequired(input_parser, 'topic_name', @ischar);
 addParameter(input_parser, 'ros_root', default_ros_root, @ischar);
+addParameter(input_parser, 'combine_times', default_time_combine, @islogical);
+
+% Parse the inputs
 parse(input_parser, bag_file, topic_name, varargin{:});
 
+% Check to make sure any directories the user passes in exist
 assert(isempty(input_parser.Results.ros_root) || ...
   (exist(input_parser.Results.ros_root, 'dir') == 7), ...
   'Requested ROS root directory does not exist');
@@ -105,6 +121,10 @@ if(~isempty(bag_data))
   bag_data = struct2table(bag_data);
   % Flatten the table
   bag_data = flattenTable(bag_data);
+  % Now produce the combined time field if requested
+  if(input_parser.Results.combine_times)
+    bag_data = combineTimes(bag_data);
+  end
 % Did not find any messages. Return an empty table
 else
   warning('Did not find any messages with the requested topic name in the bag file');
