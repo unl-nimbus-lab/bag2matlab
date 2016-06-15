@@ -1,5 +1,5 @@
 function [bag_data] = bagReader(bag_file, topic_name, varargin)
-% bagReader Reads messages from a ROS bag file
+% BAGREADER Reads messages from a ROS bag file
 %	Usage: 
 %   bag_data = BAGREADER(bag_file, topic_name) returns a table of all 
 %     the data published on the topic 'topic_name' in the bag 'bag_file'.
