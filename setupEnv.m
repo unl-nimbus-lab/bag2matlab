@@ -27,10 +27,10 @@ function [] = setupEnv(ros_root)
 %   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 % Check to see if the ROS root directory is specified
-if isempty(ros_root)
+if(isempty(ros_root))
   % If PYTHONPATH is already and environment variable we assume that the
   % rest of the system is already configured and do not do anything
-  if isempty(getenv('PYTHONPATH'))
+  if(isempty(getenv('PYTHONPATH')))
     % Look in the default ROS installation location for ROS distributions
     % and use the latest as the ROS source directory
     dir_names = dir('/opt/ros');
@@ -54,7 +54,7 @@ if isempty(ros_root)
 
     % We did not find a known ROS distribution. Just try using the last
     % directory in /opt/ros and warn the user things may be bad.
-    if isempty(ros_root)
+    if(isempty(ros_root))
       ros_root = fullfile('/opt/ros', dir_names(end).name);
       warning('Could not find a known ROS distribution, assuming your ROS distribution is rooted in %s', ros_root);
     end
@@ -66,12 +66,12 @@ if isempty(ros_root)
 end
 
 % Now modify our path to include to ROS modules
-if isempty(getenv('PYTHONPATH'))
-  if exist(ros_root, 'dir') == 7
+if(isempty(getenv('PYTHONPATH')))
+  if(exist(ros_root, 'dir') == 7)
     P = py.sys.path;
     % This stops us from repeatedly adding the the directory to the Python
     % path
-    if ~strncmp(ros_root, cellfun(@char, cell(P), 'UniformOutput', false), length(ros_root))
+    if(~strncmp(ros_root, cellfun(@char, cell(P), 'UniformOutput', false), length(ros_root)))
       % Modify the Python path with the location of the Python modules
       insert(P, int32(0), ros_root);
     end
