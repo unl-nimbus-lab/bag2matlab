@@ -50,24 +50,50 @@ assert(exist(input_parser.Results.bag_file, 'file') == 2, ...
   'Bag file does not exist');
 
 %% Python setup
-% Add the location of the Python packages for ROS to our path because our
-% script relies on their functionality
-setupEnv(input_parser.Results.ros_root);
+% We need to import the helper function, which also depends on the
+% underlying ROS Python modules working as well. Doing so depends on the
+% environment being correctly configured. If Matlab launches from the
+% terminal, it will pick up any ROS environment variables that were
+% present, and everything should just work. However, many shortcuts to
+% launching Matlab will not have the terminal environment, and thus Matlab
+% will not know where the ROS distribution modules are at. In that case, we
+% will attempt to find them for the user if the initial import fails.
 
-% Now import our Python helper function
+% Need to be in the directory where the helper Python script is located
+% to import it. Save our current directory, switch to that location, and
+% then restore the original directory at the end
+[function_path, ~, ~] = fileparts(which('bagReader'));
+current_path = pwd;
+cd(function_path);
+
+% Keep track of whether or not we have managed to load the helper module
+import_success = false;
+
+% Try to import the module
 try
-  % Need to be in the directory where the helper Python script is located
-  % to source it. Save our current directory, switch to that location, and
-  % then restore the original directory
-  [function_path, ~, ~] = fileparts(which('bagReader'));
-  current_path = pwd;
-  cd(function_path);
   py.importlib.import_module('matlab_bag_helper');
-  cd(current_path);
-catch
-  error('Could not import our matlab_bag_helper.py script');
+  import_success = true;
+catch ME
+  import_success = false;
 end
 
+% Couldn't import the module. Try to reconfigure the environment, and
+% reload the module.
+if(~import_success)
+  try
+    setupEnv(input_parser.Results.ros_root);
+    py.importlib.import_module('matlab_bag_helper');
+    import_success = true;
+  catch ME
+    % Couldn't get the module loaded. Return to the original directory, and
+    % let the user know we failed.
+    cd(current_path);
+    error('Could not import python helper function');
+  end
+end
+
+assert(import_success);
+cd(current_path);
 %% Bag reading
 % Read the data in the bag file
 bag_data = py.matlab_bag_helper.read_bag(bag_file, topic_name);
