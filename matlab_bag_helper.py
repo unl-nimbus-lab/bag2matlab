@@ -49,7 +49,7 @@ def read_bag(bag_file, topic_name):
     # Iterative over every message in the bag that matches our topic name
     for _, msg, _ in file_data.read_messages(topics=topic_name):
         # Add the extracted data to our output list
-        extracted_data.append(extract_topic_data(msg, topic_name))
+        extracted_data.append(extract_topic_data(msg))
 
     # Clean up after ourselves
     file_data.close()
@@ -81,7 +81,7 @@ def extract_topic_data(msg):
     if hasattr(msg, '__slots__'):
         # Extract all information on a non-primitive type
         for slot in msg.__slots__:
-            data[slot] = extract_topic_data(getattr(msg, slot), slot)
+            data[slot] = extract_topic_data(getattr(msg, slot))
     else:
         # We encountered a primitive type, like a double. Just return it so it gets put into the output dictionary
         return msg
