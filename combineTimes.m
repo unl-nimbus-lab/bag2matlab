@@ -41,9 +41,10 @@ sec_fields = strncmp(...
   length(SECS_FIELD_NAME));
 
 % Either we do not have a header, and the matches fail, or we should find
-% exactly one column matching our time fields
+% exactly one column matching both our time fields.
 assert((sum(nsec_fields) == 0) || (sum(nsec_fields) == 1));
-assert((sum(sec_fields) == 0) || (sum(sec_fields) == 1));
+assert((sum(sec_fields) == 0) || ...
+  ((sum(sec_fields) == 1) && (sum(nsec_fields) == 1)));
 
 % If we found the time fields in a standard header, combine them into one
 % column

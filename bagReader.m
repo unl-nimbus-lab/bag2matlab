@@ -110,6 +110,7 @@ end
 
 assert(import_success);
 cd(current_path);
+
 %% Bag reading
 % Read the data in the bag file
 bag_data = py.matlab_bag_helper.read_bag(bag_file, topic_name);
