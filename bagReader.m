@@ -79,7 +79,7 @@ assert(exist(input_parser.Results.bag_file, 'file') == 2, ...
 % to import it. Save our current directory, switch to that location, and
 % then restore the original directory at the end
 [function_path, ~, ~] = fileparts(which('bagReader'));
-current_path = pwd;
+initial_path = pwd;
 cd(function_path);
 
 % Keep track of whether or not we have managed to load the helper module
@@ -103,13 +103,14 @@ if(~import_success)
   catch ME
     % Couldn't get the module loaded. Return to the original directory, and
     % let the user know we failed.
-    cd(current_path);
+    cd(initial_path);
     error('Could not import python helper function');
   end
 end
 
 assert(import_success);
-cd(current_path);
+% Change back to the start directory
+cd(initial_path);
 
 %% Bag reading
 % Read the data in the bag file
