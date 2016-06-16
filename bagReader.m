@@ -1,4 +1,4 @@
-function [bag_data] = bagReader(bag_file, topic_name, varargin)
+function [bag_data] = bagReader(bag_file, varargin)
 % BAGREADER Reads messages from a ROS bag file
 %	Usage: 
 %   bag_data = BAGREADER(bag_file, topic_name) returns a table of all 
@@ -51,12 +51,12 @@ default_ros_root = '';
 default_time_combine = true;
 % Tell the parser how the possible inputs
 addRequired(input_parser, 'bag_file', @ischar);
-addRequired(input_parser, 'topic_name', @ischar);
+addOptional(input_parser, 'topic_name', '', @ischar);
 addParameter(input_parser, 'ros_root', default_ros_root, @ischar);
 addParameter(input_parser, 'combine_times', default_time_combine, @islogical);
 
 % Parse the inputs
-parse(input_parser, bag_file, topic_name, varargin{:});
+parse(input_parser, bag_file, varargin{:});
 
 % Check to make sure any directories the user passes in exist
 assert(isempty(input_parser.Results.ros_root) || ...
@@ -120,23 +120,30 @@ assert(IMPORT_SUCCESS);
 cd(initial_path);
 
 %% Bag reading
-% Read the data in the bag file
-bag_data = py.matlab_bag_helper.read_bag(bag_file, topic_name);
-% Convert the Python data to an array of structurs
-bag_data = py2Matlab(bag_data);
-% Check to see if we found any messages containing data
-if(~isempty(bag_data))
-  % Now make the Matlab structures a table
-  bag_data = struct2table(bag_data);
-  % Flatten the table
-  bag_data = flattenTable(bag_data);
-  % Now produce the combined time field if requested
-  if(input_parser.Results.combine_times)
-    bag_data = combineTimes(bag_data);
-  end
-% Did not find any messages. Return an empty table
+if isempty( input_parser.Results.topic_name )
+    % If topic name not provided, return a list of topics.
+    bag_data = bagTopicList( bag_file );
 else
-  warning('Did not find any messages with the requested topic name in the bag file');
-  bag_data = table();
+    % Topic name is the argument following bag_file.
+    topic_name = varargin{1};
+    % Read the data in the bag file
+    bag_data = py.matlab_bag_helper.read_bag(bag_file, topic_name);
+    % Convert the Python data to an array of structurs
+    bag_data = py2Matlab(bag_data);
+    % Check to see if we found any messages containing data
+    if(~isempty(bag_data))
+     % Now make the Matlab structures a table
+      bag_data = struct2table(bag_data);
+      % Flatten the table
+      bag_data = flattenTable(bag_data);
+      % Now produce the combined time field if requested
+      if(input_parser.Results.combine_times)
+        bag_data = combineTimes(bag_data);
+      end
+    % Did not find any messages. Return an empty table
+    else
+      warning('Did not find any messages with the requested topic name in the bag file');
+      bag_data = table();
+    end
 end
 end
