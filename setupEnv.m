@@ -26,12 +26,18 @@ function [] = setupEnv(ros_root)
 %   along with this program; if not, write to the Free Software
 %   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-% Check to see if the ROS root directory is specified
+% Check to see if the user has specified where to search for the Python 
+% packages. We will skip all our autodetection and use their path if this
+% is the case
 if(~isempty(ros_root))
   override_root = true;
+else
+  override_root = false;
 end
 
-if(isempty(ros_root))
+% If the user has not specified the ROS Python modules are located, we will
+% use the following code to try to find the packages
+if(~override_root)
   % If ROS_DISTRO is already and environment variable we assume that the
   % rest of the system is already configured and do not do anything
   if(isempty(getenv('ROS_DISTRO')))
