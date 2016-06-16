@@ -83,23 +83,30 @@ initial_path = pwd;
 cd(function_path);
 
 % Keep track of whether or not we have managed to load the helper module
-import_success = false;
+persistent IMPORT_SUCCESS;
 
+if(isempty(IMPORT_SUCCESS))
+  IMPORT_SUCCESS = false;
+end
+
+% If the module has not previously been loaded, try to load it
+if(~IMPORT_SUCCESS)
 % Try to import the module
-try
-  py.importlib.import_module('matlab_bag_helper');
-  import_success = true;
-catch ME
-  import_success = false;
+  try
+    py.importlib.import_module('matlab_bag_helper');
+    IMPORT_SUCCESS = true;
+  catch ME
+    IMPORT_SUCCESS = false;
+  end
 end
 
 % Couldn't import the module. Try to reconfigure the environment, and
 % reload the module.
-if(~import_success)
+if(~IMPORT_SUCCESS)
   try
     setupEnv(input_parser.Results.ros_root);
     py.importlib.import_module('matlab_bag_helper');
-    import_success = true;
+    IMPORT_SUCCESS = true;
   catch ME
     % Couldn't get the module loaded. Return to the original directory, and
     % let the user know we failed.
@@ -108,7 +115,7 @@ if(~import_success)
   end
 end
 
-assert(import_success);
+assert(IMPORT_SUCCESS);
 % Change back to the start directory
 cd(initial_path);
 
