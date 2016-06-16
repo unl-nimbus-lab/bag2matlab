@@ -1,6 +1,6 @@
 function [] = setupEnv(ros_root)
 % SETUPENV Set up Python environment for accessing ROS Python libraries
-%   from Matlab. If the PYTHONPATH environment variable exists, assume that
+%   from Matlab. If the ROS_DISTRO environment variable exists, assume that
 %   the environment is already correctly configured and do not modify the
 %   Python path
 %
@@ -27,10 +27,14 @@ function [] = setupEnv(ros_root)
 %   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 % Check to see if the ROS root directory is specified
+if(~isempty(ros_root))
+  override_root = true;
+end
+
 if(isempty(ros_root))
-  % If PYTHONPATH is already and environment variable we assume that the
+  % If ROS_DISTRO is already and environment variable we assume that the
   % rest of the system is already configured and do not do anything
-  if(isempty(getenv('PYTHONPATH')))
+  if(isempty(getenv('ROS_DISTRO')))
     % Look in the default ROS installation location for ROS distributions
     % and use the latest as the ROS source directory
     dir_names = dir('/opt/ros');
@@ -66,7 +70,7 @@ if(isempty(ros_root))
 end
 
 % Now modify our path to include to ROS modules
-if(isempty(getenv('PYTHONPATH')))
+if(isempty(getenv('ROS_DISTRO')) || override_root)
   if(exist(ros_root, 'dir') == 7)
     P = py.sys.path;
     % This stops us from repeatedly adding the the directory to the Python
