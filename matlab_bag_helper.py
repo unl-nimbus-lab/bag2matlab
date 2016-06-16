@@ -89,6 +89,38 @@ def extract_topic_data(msg):
     # Return the dictionary representing all of the fields and their information in this message
     return data
 
+def display_bag_topics( bag_file ):
+	""" Query the topic names in a bag file.
+	
+	 AJ: this gets called to display topics in a bag when no topics are specified from the original Matlab call.
+	 
+	 	-- Uses YAML to extract all information from a bag file, similar to the cmd line "rosbag info",
+	 		then loops through the returned dictionary to get topic names.
+	 NOTE TO HUMANS FROM THE FUTURE:
+	 The returned dictionary has more information such as message name, type, frequency and number.
+	 I have neither the time, nor the need for any of those .. yet ..
+	 
+	 Args:
+	 	bag_file: name of the bag file.
+	 Returns:
+	 	a list of Python strings.
+	 
+	 """
+	bag = rosbag.Bag( bag_file );
+	
+	# Get a convoluted dictionary of lists of dictionaries. Awesome.
+	topic_dict = yaml.load( bag._get_yaml_info() );
+	
+	# Create a list of strings
+	topic_list = [];
+	
+	# Fill in the topic names from the extracted dictionary.
+	# I'm pretty sure there's an easier way of doing this without a loop.
+	# 	.. I shall await the ancient wisdom of some Python wizard ..
+	for topic_num in range( len(topic_dict['topics']) ):
+		topic_list.append( topic_dict['topics'][topic_num]['topic'] );
+	return topic_list
+		
 
 if __name__ == "__main__":
     unittest.main()
