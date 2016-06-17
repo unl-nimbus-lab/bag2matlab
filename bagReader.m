@@ -74,50 +74,7 @@ assert(exist(input_parser.Results.bag_file, 'file') == 2, ...
 % launching Matlab will not have the terminal environment, and thus Matlab
 % will not know where the ROS distribution modules are at. In that case, we
 % will attempt to find them for the user if the initial import fails.
-
-% Need to be in the directory where the helper Python script is located
-% to import it. Save our current directory, switch to that location, and
-% then restore the original directory at the end
-[function_path, ~, ~] = fileparts(which('bagReader'));
-initial_path = pwd;
-cd(function_path);
-
-% Keep track of whether or not we have managed to load the helper module
-persistent IMPORT_SUCCESS;
-
-if(isempty(IMPORT_SUCCESS))
-  IMPORT_SUCCESS = false;
-end
-
-% If the module has not previously been loaded, try to load it
-if(~IMPORT_SUCCESS)
-% Try to import the module
-  try
-    py.importlib.import_module('matlab_bag_helper');
-    IMPORT_SUCCESS = true;
-  catch ME
-    IMPORT_SUCCESS = false;
-  end
-end
-
-% Couldn't import the module. Try to reconfigure the environment, and
-% reload the module.
-if(~IMPORT_SUCCESS)
-  try
-    setupEnv(input_parser.Results.ros_root);
-    py.importlib.import_module('matlab_bag_helper');
-    IMPORT_SUCCESS = true;
-  catch ME
-    % Couldn't get the module loaded. Return to the original directory, and
-    % let the user know we failed.
-    cd(initial_path);
-    error('Could not import python helper function');
-  end
-end
-
-assert(IMPORT_SUCCESS);
-% Change back to the start directory
-cd(initial_path);
+setupEnv();
 
 %% Bag reading
 % Read the data in the bag file
