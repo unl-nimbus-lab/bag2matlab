@@ -35,6 +35,12 @@ if(isempty(IMPORT_SUCCESS))
   IMPORT_SUCCESS = false;
 end
 
+% IF we have already import our Python module and the user is not
+% overriding the root
+if(IMPORT_SUCCESS && isempty(ros_root))
+  return;
+end
+
 % Check to see if the user has specified where to search for the Python 
 % packages. We will skip all our autodetection and use their path if this
 % is the case
@@ -45,9 +51,9 @@ else
 end
 
 % If the user has not specified the ROS Python modules are located, we will
-% use the following code to try to find the packages if we have not managed to
-% previously find them. If we have already loaded the module, do not repeat this
-% step
+% use the following code to try to find the packages if we have not managed
+% to previously find them. If we have already loaded the module, do not 
+% repeat this step
 if(~override_root && ~IMPORT_SUCCESS)
   % If ROS_DISTRO is already an environment variable we assume that the
   % rest of the system is already configured and do not do anything
