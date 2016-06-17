@@ -74,7 +74,7 @@ assert(exist(input_parser.Results.bag_file, 'file') == 2, ...
 % launching Matlab will not have the terminal environment, and thus Matlab
 % will not know where the ROS distribution modules are at. In that case, we
 % will attempt to find them for the user if the initial import fails.
-setupEnv();
+setupEnv(input_parser.Results.ros_root);
 
 %% Bag reading
 % Read the data in the bag file
