@@ -1,7 +1,9 @@
-function [converted_data] = py2Matlab(original_data)
+function [converted_data] = py2Matlab(original_data, uniform_output)
 % py2Matlab Convert Python objects to their Matlab equivalent
-%	Usage:	py2Matlab(python_data) Converts data from a Python object to
-%   native Matlab representations
+%	Usage:	py2Matlab(python_data, uniform_output) Converts data from a 
+%           Python object to native Matlab representations. uniform_output
+%           indicates whether or not the output should be placed in a cell
+%           array
 
 %   Copyright (c) 2016 David Anthony
 %
@@ -25,7 +27,7 @@ function [converted_data] = py2Matlab(original_data)
       % Recursively call this function on all data in a list to convert
       % all Python objects in the list to Matlab types
       converted_data = cell(original_data);
-      converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', false);
+      converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', uniform_output);
       
     case 'py.dict'
       % Dictionaries can have Python data types in them, so recursively

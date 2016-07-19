@@ -16,6 +16,7 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import os
 import rosbag
 import unittest
 
@@ -41,7 +42,7 @@ def read_bag(bag_file, topic_name):
     """
 
     # Open the bag file
-    file_data = rosbag.Bag(bag_file)
+    file_data = rosbag.Bag(os.path.abspath(os.path.expanduser(bag_file)))
 
     # Initialize the output
     extracted_data = []
@@ -59,7 +60,18 @@ def read_bag(bag_file, topic_name):
 
 
 def extract_topic_names_types(bag_file):
-    bag = rosbag.Bag(bag_file)
+    """ Gets the topic names and types of messages in a bag file.
+
+        Opens up the bag file and reads the topic names and types of the messages in that bag file. Uses code from the
+        ROS bag cookbook.
+
+        Args:
+            bag_file: path to the bag file
+
+        Returns:
+            A tuple of lists. The first list is the topic names, and the second list is the topic types.
+    """
+    bag = rosbag.Bag(os.path.abspath(os.path.expanduser(bag_file)))
     topics = bag.get_type_and_topic_info()[1].keys()
     types = []
     for i in range(0, len(bag.get_type_and_topic_info()[1].values())):
