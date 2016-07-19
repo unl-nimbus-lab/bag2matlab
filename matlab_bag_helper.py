@@ -58,6 +58,15 @@ def read_bag(bag_file, topic_name):
     return extracted_data
 
 
+def extract_topic_names_types(bag_file):
+    bag = rosbag.Bag(bag_file)
+    topics = bag.get_type_and_topic_info()[1].keys()
+    types = []
+    for i in range(0, len(bag.get_type_and_topic_info()[1].values())):
+        types.append(bag.get_type_and_topic_info()[1].values()[i][0])
+    return topics, types
+
+
 def extract_topic_data(msg):
     """ Reads all data in a message
 

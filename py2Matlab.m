@@ -25,7 +25,7 @@ function [converted_data] = py2Matlab(original_data)
       % Recursively call this function on all data in a list to convert
       % all Python objects in the list to Matlab types
       converted_data = cell(original_data);
-      converted_data = cellfun(@py2Matlab, converted_data);
+      converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', false);
       
     case 'py.dict'
       % Dictionaries can have Python data types in them, so recursively
