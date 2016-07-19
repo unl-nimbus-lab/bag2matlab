@@ -87,8 +87,13 @@ if(~override_root && ~IMPORT_SUCCESS)
     end
     
     % Assume that all of ROS's Python modules are nested in the following
-    % subdirectory
-    ros_root = fullfile(ros_root, 'lib/python2.7/dist-packages');
+    % subdirectories, depending on the OS
+    os = computer;
+    if(strcmpi(os, 'MACI64'))
+      ros_root = fullfile(ros_root, 'lib', 'python2.7', 'site-packages');
+    else
+      ros_root = fullfile(ros_root, 'lib', 'python2.7', 'dist-packages');
+    end
   end
 end
 
@@ -101,6 +106,7 @@ if((isempty(getenv('ROS_DISTRO')) && ~IMPORT_SUCCESS) || override_root)
     modifyPath(ros_root);
   else
     error('Could not find location of ROS Python packages');
+    IMPORT_SUCCESS = false;
   end
 end
 
