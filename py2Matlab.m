@@ -26,19 +26,26 @@ function [converted_data] = py2Matlab(original_data)
       % all Python objects in the list to Matlab types
       converted_data = cell(original_data);
       
-      % We must call structfun on objects with non-scalar data types with
-      % the UniformOutput argument set to false, or they don't convert
-      % correctly.
-      uniform_output = true;
-      if(strcmp(class(converted_data{1}), 'py.str') || ...
-        strcmp(class(converted_data{1}), 'py.unicode'))
-        uniform_output = false;
-      end
-      
-      try
-        converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', uniform_output);
-      catch
-        error('Could not convert Python data of type: %s', class(converted_data{1}));
+      % If we were passed an empty list just return an empty array.
+      % The conversion function below does not work on empty data and will
+      % crash if it operates on an empty cell array.
+      if(~isempty(converted_data))
+        % We must call structfun on objects with non-scalar data types with
+        % the UniformOutput argument set to false, or they don't convert
+        % correctly.
+        uniform_output = true;
+        if(strcmp(class(converted_data{1}), 'py.str') || ...
+          strcmp(class(converted_data{1}), 'py.unicode'))
+          uniform_output = false;
+        end
+
+        try
+          converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', uniform_output);
+        catch
+          error('Could not convert Python data of type: %s', class(converted_data{1}));
+        end
+      else
+        converted_data = [];
       end
       
     case 'py.dict'
