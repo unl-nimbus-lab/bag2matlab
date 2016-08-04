@@ -80,7 +80,7 @@ setupEnv(input_parser.Results.ros_root);
 % Read the data in the bag file
 bag_data = py.matlab_bag_helper.read_bag(bag_file, topic_name);
 % Convert the Python data to an array of structures
-bag_data = py2Matlab(bag_data, true);
+bag_data = py2Matlab(bag_data);
 % Check to see if we found any messages containing data
 if(~isempty(bag_data))
   % Now make the Matlab structures a table

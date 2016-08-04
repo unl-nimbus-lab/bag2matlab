@@ -1,4 +1,4 @@
-function [converted_data] = py2Matlab(original_data, uniform_output)
+function [converted_data] = py2Matlab(original_data)
 % py2Matlab Convert Python objects to their Matlab equivalent
 %	Usage:	py2Matlab(python_data, uniform_output) Converts data from a 
 %           Python object to native Matlab representations. uniform_output
@@ -27,7 +27,21 @@ function [converted_data] = py2Matlab(original_data, uniform_output)
       % Recursively call this function on all data in a list to convert
       % all Python objects in the list to Matlab types
       converted_data = cell(original_data);
-      converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', uniform_output);
+      
+      % We must call structfun on objects with non-scalar data types with
+      % the UniformOutput argument set to false, or they don't convert
+      % correctly.
+      uniform_output = true;
+      if(strcmp(class(converted_data{1}), 'py.str') || ...
+        strcmp(class(converted_data{1}), 'py.unicode'))
+        uniform_output = false;
+      end
+      
+      try
+        converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', uniform_output);
+      catch
+        error('Could not convert Python data of type: %s', class(converted_data{1}));
+      end
       
     case 'py.dict'
       % Dictionaries can have Python data types in them, so recursively
@@ -48,7 +62,7 @@ function [converted_data] = py2Matlab(original_data, uniform_output)
       converted_data = char(original_data);
       
     case 'py.int'
-      converted_data = double(original_data);
+      converted_data = int64(original_data);
       
     case 'py.long'
       converted_data = double(original_data);
@@ -59,7 +73,13 @@ function [converted_data] = py2Matlab(original_data, uniform_output)
     otherwise
       % Encountered some data that we do not have an explicit handler for.
       % This probably is not problem and just means the data was part of a
-      % dictionary or list we are automatically converting.
-      converted_data = double(original_data);
+      % dictionary or list we are automatically converting. Throw an error
+      % if we cannot make the conversion. This means we need to add another
+      % clause to this switch statement to handle the conversion.
+      try
+        converted_data = double(original_data);
+      catch
+        error('Could not convert Python data of type: %s', class(original_data));
+      end
   end
 end

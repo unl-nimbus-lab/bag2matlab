@@ -65,5 +65,5 @@ setupEnv(input_parser.Results.ros_root);
 % Call into the Python interface to get the names and types
 bag_data = py.matlab_bag_helper.extract_topic_names_types(bag_file);
 % Convert Python list types to Matlab cell arrays
-topic_names = py2Matlab(bag_data{1}, false);
-topic_types = py2Matlab(bag_data{2}, false);
+topic_names = py2Matlab(bag_data{1});
+topic_types = py2Matlab(bag_data{2});
