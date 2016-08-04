@@ -1,9 +1,7 @@
 function [converted_data] = py2Matlab(original_data)
 % py2Matlab Convert Python objects to their Matlab equivalent
-%	Usage:	py2Matlab(python_data, uniform_output) Converts data from a 
-%           Python object to native Matlab representations. uniform_output
-%           indicates whether or not the output should be placed in a cell
-%           array
+%	Usage:	py2Matlab(python_data) Converts data from a 
+%           Python object to native Matlab representations.
 
 %   Copyright (c) 2016 David Anthony
 %
