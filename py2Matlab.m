@@ -19,7 +19,8 @@ function [converted_data] = py2Matlab(original_data)
 %   along with this program; if not, write to the Free Software
 %   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-  % Call the appropriate conversion routine for the given Python data type
+  % Call the appropriate conversion routine for the given Python or Matlab
+  % data type
   switch(class(original_data))
     case 'py.list'
       % Recursively call this function on all data in a list to convert
@@ -33,17 +34,13 @@ function [converted_data] = py2Matlab(original_data)
         % We must call structfun on objects with non-scalar data types with
         % the UniformOutput argument set to false, or they don't convert
         % correctly.
-        uniform_output = true;
-        if(strcmp(class(converted_data{1}), 'py.str') || ...
-          strcmp(class(converted_data{1}), 'py.unicode'))
-          uniform_output = false;
+        uniform_output = false;
+        if(strcmp(class(converted_data{1}), 'py.int') || ...
+          strcmp(class(converted_data{1}), 'py.long') || ...
+          strcmp(class(converted_data{1}), 'py.array.array'))
+          uniform_output = true;
         end
-
-        try
-          converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', uniform_output);
-        catch
-          error('Could not convert Python data of type: %s', class(converted_data{1}));
-        end
+        converted_data = cellfun(@py2Matlab, converted_data, 'UniformOutput', uniform_output);
       else
         converted_data = [];
       end
@@ -75,16 +72,57 @@ function [converted_data] = py2Matlab(original_data)
     case 'py.array.array'
       converted_data = double(original_data);
       
+    case 'double'
+      converted_data = double(original_data);
+                 
+    case 'single'
+      converted_data = single(original_data);
+      
+    case 'logical'
+      converted_data = logical(original_data);
+      
+    case 'char'
+      converted_data = char(original_data);
+      
+    case 'int8'
+      converted_data = int8(original_data);
+      
+    case 'uint8'
+      converted_data = uint8(original_data);
+      
+    case 'int16'
+      converted_data = int16(original_data);
+      
+    case 'uint16'
+      converted_data = uint16(original_data);
+      
+    case 'int32'
+      converted_data = int32(original_data);
+      
+    case 'uint32'
+      converted_data = uint32(original_data);
+      
+    case 'int64'
+      converted_data = int64(original_data);
+      
+    case 'uint64'
+      converted_data = uint64(original_data);
+      
     otherwise
       % Encountered some data that we do not have an explicit handler for.
-      % This probably is not problem and just means the data was part of a
-      % dictionary or list we are automatically converting. Throw an error
-      % if we cannot make the conversion. This means we need to add another
-      % clause to this switch statement to handle the conversion.
+      % This may not be a problem, and indicates we hit some kind of
+      % fundamental ROS data type. Trying converting each one of the object
+      % members to a Matlab representation
       try
-        converted_data = double(original_data);
+        % Iterate over every member of the object and try to convert it to
+        % a Matlab data type.
+        p = properties(original_data);
+        converted_data = cell(numel(p), 1);
+        for idx = 1:numel(p)
+          eval(strcat('converted_data{idx} = py2Matlab(original_data.', p{idx}, ');'));
+        end
       catch
-        error('Could not convert Python data of type: %s', class(original_data));
+        error('Could not convert data of type: %s', class(original_data));
       end
   end
 end

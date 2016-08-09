@@ -84,7 +84,7 @@ bag_data = py2Matlab(bag_data);
 % Check to see if we found any messages containing data
 if(~isempty(bag_data))
   % Now make the Matlab structures a table
-  bag_data = struct2table(bag_data);
+  bag_data = struct2table(cell2mat(bag_data));
   % Flatten the table
   bag_data = flattenTable(bag_data);
   % Now produce the combined time field if requested
