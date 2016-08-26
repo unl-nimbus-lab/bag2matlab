@@ -50,8 +50,8 @@ assert((sum(sec_fields) == 0) || ...
 % column
 if(any(nsec_fields) && any(sec_fields))
   % Scale nanoseconds to seconds
-  nsecs = table2array(modified_table(:, nsec_fields)) / 1e9;
-  secs = table2array(modified_table(:, sec_fields));
+  nsecs = double(table2array(modified_table(:, nsec_fields))) / 1e9;
+  secs = double(table2array(modified_table(:, sec_fields)));
   % Store the output as seconds
   modified_table.header_times = secs + nsecs;
 end
