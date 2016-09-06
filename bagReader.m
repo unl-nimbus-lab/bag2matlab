@@ -23,9 +23,23 @@ function [bag_data] = bagReader(bag_file, topic_name, varargin)
 %     a single combined time and add that to the results. Default value is 
 %     true.
 %
-%   Example: pose = bagReader('flight.bag', '/uav/pose');
-%   Example: pose = bagReader('flight.bag', '/uav/pose', 'ros_root', '~/ros_catkin_ws/devel');
-%   ExamplE: pose = bagReader('flight.bag', '/uav/pose', 'combine_times', false);
+%   'min_idx' -- A positive integer that defines the 1-based index to start
+%     reading messages from. Defaults to 1. Setting a larger values skips
+%     over messages at the beginning of a bag file
+%
+%   'max_idx' -- A positive integer that is greater than min_idx. The
+%     reader stops reading the bag file at this message index. min_idx and
+%     max_idx are inclusive values, so specifying both of them results in
+%     reading messages with indices between [min_idx, max_idx].
+%
+%   Example: Read all messages published on /uav/pose in flight.bag
+%     pose = bagReader('flight.bag', '/uav/pose');
+%   Example: Read all messages from bag file if ROS is built in ~/ros_catkin-ws/devel
+%     pose = bagReader('flight.bag', '/uav/pose', 'ros_root', '~/ros_catkin_ws/devel');
+%   Example: Do not combine the seconds and nanoseconds fields in header messages
+%     pose = bagReader('flight.bag', '/uav/pose', 'combine_times', false);
+%   Example: Read the second 100 pose messages from the bag file
+%     pose = bagReader('flight.bag', '/uav/pose', 'min_idx', 100', 'max_idx', 200);
 
 %   Copyright (c) 2016 David Anthony
 %
@@ -46,14 +60,19 @@ function [bag_data] = bagReader(bag_file, topic_name, varargin)
 %% Input parsing and validation
 % Build an argument parser for reading the optional arguments
 input_parser = inputParser;
+idxValidationFcn = @(x) assert(isnumeric(x) && isscalar(x) && (x > 0) && (rem(x, 1) == 0), 'Index must be positive integer');
 % Set default values
-default_ros_root = '';
-default_time_combine = true;
-% Tell the parser how the possible inputs
+default_ros_root = ''; % Do not guess where ROS is by default
+default_time_combine = true; % Combine header time fields by default
+default_min_msg_idx = 1; % Begin at the first message
+default_max_msg_idx = intmax('int64'); % Read all messages. Assumes no bag has more than 2^64 - 1 messages for a topic
+% Tell the parser about the possible inputs
 addRequired(input_parser, 'bag_file', @ischar);
 addRequired(input_parser, 'topic_name', @ischar);
 addParameter(input_parser, 'ros_root', default_ros_root, @ischar);
 addParameter(input_parser, 'combine_times', default_time_combine, @islogical);
+addParameter(input_parser, 'min_idx', default_min_msg_idx, idxValidationFcn);
+addParameter(input_parser, 'max_idx', default_max_msg_idx, idxValidationFcn);
 
 % Parse the inputs
 parse(input_parser, bag_file, topic_name, varargin{:});
@@ -64,6 +83,12 @@ assert(isempty(input_parser.Results.ros_root) || ...
   'Requested ROS root directory does not exist');
 assert(exist(input_parser.Results.bag_file, 'file') == 2, ...
   'Bag file does not exist');
+
+% Check to make sure the min and max indices make sense
+assert(input_parser.Results.min_idx > 0, ...
+  'Minimum message index must be greater than 0');
+assert(input_parser.Results.max_idx >= input_parser.Results.min_idx, ...
+  'Maximum message index must be greater than or equal to the minimum index');
 
 %% Python setup
 % We need to import the helper function, which also depends on the
@@ -77,8 +102,13 @@ assert(exist(input_parser.Results.bag_file, 'file') == 2, ...
 setupEnv(input_parser.Results.ros_root);
 
 %% Bag reading
-% Read the data in the bag file
-bag_data = py.matlab_bag_helper.read_bag(bag_file, topic_name);
+% Read the data in the bag file. Convert the min/max indices to 0-indexed
+% representation
+bag_data = py.matlab_bag_helper.read_bag(...
+  bag_file, ...
+  topic_name, ...
+  input_parser.Results.min_idx - 1, ...
+  input_parser.Results.max_idx - 1);
 % Convert the Python data to an array of structures
 bag_data = py2Matlab(bag_data);
 % Check to see if we found any messages containing data

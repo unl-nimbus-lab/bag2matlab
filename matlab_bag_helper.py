@@ -26,7 +26,7 @@ class TestBagReader(unittest.TestCase):
     pass
 
 
-def read_bag(bag_file, topic_name):
+def read_bag(bag_file, topic_name, min_idx, max_idx):
     """ Reads all messages in a topic from a bag file.
 
         Opens up a bag file and reads all the messages in that bag file that match a topic name. Minimal error handling,
@@ -35,11 +35,17 @@ def read_bag(bag_file, topic_name):
         Args:
             bag_file: A path to the bag file
             topic_name: A string containing the topic name to read out
+            min_idx: An integer containing the first message index to return
+            max_idx: An integer containing the last message index to return
 
         Returns:
             A list of dictionaries. Each dictionary is a single message in the bag. The list is each message as it was
             encountered in the bag file.
     """
+
+    # Check that the index bounds are reasonable
+    assert min_idx >= 0
+    assert max_idx >= min_idx
 
     # Open the bag file
     file_data = rosbag.Bag(os.path.abspath(os.path.expanduser(bag_file)))
@@ -47,10 +53,20 @@ def read_bag(bag_file, topic_name):
     # Initialize the output
     extracted_data = []
 
-    # Iterative over every message in the bag that matches our topic name
+    # Initialize the counter for keeping track of whether or not we are within the minimum/maximum index
+    msg_idx = 0
+
+    # Iterate over every message in the bag that matches our topic name
     for _, msg, _ in file_data.read_messages(topics=topic_name):
-        # Add the extracted data to our output list
-        extracted_data.append(extract_topic_data(msg))
+        # Check if we are past the start of the location in the bag file to read from
+        if msg_idx >= min_idx:
+            # Add the extracted data to our output list
+            extracted_data.append(extract_topic_data(msg))
+        # Increment the index and bail from the loop early if we have advanced past the last message of interest. This
+        # early exit can yield significant performance gains
+        msg_idx += 1
+        if msg_idx > max_idx:
+            break
 
     # Clean up after ourselves
     file_data.close()
