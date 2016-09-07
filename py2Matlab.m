@@ -52,7 +52,10 @@ function [converted_data] = py2Matlab(original_data)
       converted_data = structfun(@py2Matlab, converted_data, 'UniformOutput', false);
       
     case 'py.str'
-      converted_data = char(original_data);
+      % Converting Python strings to Matlab char arrays has some unexpected
+      % behaviors. Use this helper function to get the correct
+      % representation.
+      converted_data = pyStrToMatlab(original_data);
       
     case 'py.tuple'
       converted_data = cell(original_data);
@@ -124,5 +127,33 @@ function [converted_data] = py2Matlab(original_data)
       catch
         error('Could not convert data of type: %s', class(original_data));
       end
+  end
+  
+  function [matlab_data] = pyStrToMatlab(python_data)
+    % Workaround for unexpected ehavior of Matlab's char() function.
+    % Certain Python string values return an empty array when Matlab's
+    % char() function is called on them. To get the correct value we can
+    % iterate over the string, using Python's ord() method to get the 
+    % integer representation of the character value, and then we convert 
+    % this to a native Matlab data type.
+    %
+    % However, the correct process is orders of magnitude slower. So do the
+    % cheap conversion first, see if it yields a character array that is
+    % the same length as the Python string, and assume the conversion
+    % worked if they are the same length. If they are not the same length
+    % do the expensive conversion.
+    
+    % Fast conversion
+    matlab_data = char(python_data);
+    
+    % If fast conversion did not work, do the expensive conversion
+    if(numel(matlab_data) ~= py.len(python_data))
+      % Pre-allocate results
+      matlab_data = char(1:py.len(python_data));
+      % Convert each character in the Python string to a char in Matlab
+      for str_idx = 1:py.len(python_data)
+        matlab_data(str_idx) = char(py.ord(python_data(str_idx)));
+      end    
+    end
   end
 end
