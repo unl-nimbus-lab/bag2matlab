@@ -36,7 +36,7 @@ switch encoding
 end
 
   function [] = convertMono8()
-    matlab_image = reshape(uint8(ros_image), width, height);
+    matlab_image = reshape(uint8(ros_image), width, height)';
   end
 
   function [] = convertBGR8()
