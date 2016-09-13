@@ -120,9 +120,16 @@ function [converted_data] = py2Matlab(original_data)
         % Iterate over every member of the object and try to convert it to
         % a Matlab data type.
         p = properties(original_data);
-        converted_data = cell(numel(p), 1);
+        converted_data = struct();
+    
+        % Initialize the struct field names
         for idx = 1:numel(p)
-          eval(strcat('converted_data{idx} = py2Matlab(original_data.', p{idx}, ');'));
+          converted_data.(p{idx}) = [];
+        end
+        
+        % Use recursion to assign values to the fields
+        for idx = 1:numel(p)
+          converted_data.(p{idx}) = py2Matlab(original_data.(p{idx}));
         end
       catch
         error('Could not convert data of type: %s', class(original_data));
