@@ -57,11 +57,14 @@ def read_bag(bag_file, topic_name, min_idx, max_idx):
     msg_idx = 0
 
     # Iterate over every message in the bag that matches our topic name
-    for _, msg, _ in file_data.read_messages(topics=topic_name):
+    for _, msg, t in file_data.read_messages(topics=topic_name):
         # Check if we are past the start of the location in the bag file to read from
         if msg_idx >= min_idx:
             # Add the extracted data to our output list
-            extracted_data.append(extract_topic_data(msg))
+            data = extract_topic_data(msg, t)
+            data['rosbag_recv_time_secs'] = t.secs
+            data['rosbag_recv_time_nsecs'] = t.nsecs
+            extracted_data.append(data)
         # Increment the index and bail from the loop early if we have advanced past the last message of interest. This
         # early exit can yield significant performance gains
         msg_idx += 1
@@ -95,7 +98,7 @@ def extract_topic_names_types(bag_file):
     return topics, types
 
 
-def extract_topic_data(msg):
+def extract_topic_data(msg, t):
     """ Reads all data in a message
 
         This is a recursive function. Given a message, extract all of the data in the message to a dictionary. The keys
@@ -111,14 +114,13 @@ def extract_topic_data(msg):
     """
     # Initialize the information found for this message
     data = {}
-
     # If the message has slots, we have a non-primitive type, and need to extract all of the information from this
     # message by recursively calling this function on the data in that slot. For example, we may have a message with a
     # geometry_msgs/Vector3 as a field. Call this function on that field to get the x, y, and z components
     if hasattr(msg, '__slots__'):
         # Extract all information on a non-primitive type
         for slot in msg.__slots__:
-            data[slot] = extract_topic_data(getattr(msg, slot))
+            data[slot] = extract_topic_data(getattr(msg, slot), t)
     else:
         # We encountered a primitive type, like a double. Just return it so it gets put into the output dictionary
         return msg
