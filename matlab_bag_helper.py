@@ -16,6 +16,7 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from __future__ import division
 import os
 import rosbag
 import unittest
@@ -62,8 +63,10 @@ def read_bag(bag_file, topic_name, min_idx, max_idx):
         if msg_idx >= min_idx:
             # Add the extracted data to our output list
             data = extract_topic_data(msg, t)
-            data['rosbag_recv_time_secs'] = t.secs
-            data['rosbag_recv_time_nsecs'] = t.nsecs
+            # Convert the time the message the message was recorded in the bag file to a single scalar value and add it
+            # to the new data
+            data['rosbag_recv_time'] = t.secs + (t.nsecs / 1e9)
+            # Add the new data to the set we return to the caller
             extracted_data.append(data)
         # Increment the index and bail from the loop early if we have advanced past the last message of interest. This
         # early exit can yield significant performance gains
@@ -108,6 +111,7 @@ def extract_topic_data(msg, t):
 
         Args:
             msg: A ROS message
+            t: Time the message was recorded in the bag file
 
         Returns:
             A dictionary containing all information found in the message.
