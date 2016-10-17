@@ -52,7 +52,7 @@ function [bag_data, topics_read] = bagReader(bag_file, varargin)
 %   Example: Read all messages published on /uav/pose in flight.bag
 %     pose = bagReader('flight.bag', '/uav/pose');
 %   Example: Read all messages published on /uav/pose and /uav/gps in flight.bag
-%     pose = bagReader('flight.bag', {'/uav/pose', '/uav/gps'});
+%     [data, names] = bagReader('flight.bag', {'/uav/pose', '/uav/gps'});
 %   Example: Read all messages from bag file if ROS is built in ~/ros_catkin-ws/devel
 %     pose = bagReader('flight.bag', '/uav/pose', 'ros_root', '~/ros_catkin_ws/devel');
 %   Example: Do not combine the seconds and nanoseconds fields in header messages
