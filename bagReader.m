@@ -107,8 +107,10 @@ end
 assert(isempty(input_parser.Results.ros_root) || ...
   (exist(input_parser.Results.ros_root, 'dir') == 7), ...
   'Requested ROS root directory does not exist');
-assert(exist(input_parser.Results.bag_file, 'file') == 2, ...
-  'Bag file does not exist');
+
+if(exist(input_parser.Results.bag_file, 'file') ~= 2)
+  error('%s does not exist', input_parser.Results.bag_file);
+end
 
 % Check that we have the same number of min and max indices
 assert(numel(input_parser.Results.min_idx) == numel(input_parser.Results.max_idx));
