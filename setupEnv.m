@@ -63,6 +63,7 @@ if(~override_root && ~IMPORT_SUCCESS)
     dir_names = dir('/opt/ros');
     dir_names = dir_names([dir_names.isdir]);
     ros_root = '';
+    python_version = 2;
 
     % Iterate through the found directories and add the latest ROS
     % distribution as the ROS root location. By placing the switch clauses
@@ -75,6 +76,9 @@ if(~override_root && ~IMPORT_SUCCESS)
           ros_root = '/opt/ros/jade';
         case 'kinetic'
           ros_root = '/opt/ros/kinetic';
+        case 'noetic'
+          ros_root = '/opt/ros/noetic';
+          python_version = 3;
         otherwise
       end
     end
@@ -90,9 +94,17 @@ if(~override_root && ~IMPORT_SUCCESS)
     % subdirectories, depending on the OS
     os = computer;
     if(strcmpi(os, 'MACI64'))
-      ros_root = fullfile(ros_root, 'lib', 'python2.7', 'site-packages');
+      if(python_version == 2)
+        ros_root = fullfile(ros_root, 'lib', 'python2.7', 'site-packages');
+      else
+        ros_root = fullfile(ros_root, 'lib', 'python3', 'site-packages');
+      end
     else
-      ros_root = fullfile(ros_root, 'lib', 'python2.7', 'dist-packages');
+      if(python_version == 2)
+        ros_root = fullfile(ros_root, 'lib', 'python2.7', 'dist-packages');
+      else
+        ros_root = fullfile(ros_root, 'lib', 'python3', 'dist-packages');
+      end
     end
   end
 end
